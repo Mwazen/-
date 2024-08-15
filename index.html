@@ -1,79 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Prices in Egypt</title>
     <style>
         body {
-            background-color: black;
-            color: yellow;
+            background-color: #1a1a1a;
+            color: #ffd700;
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
             background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
-            direction: ltr; /* Left to Right direction for English */
         }
 
         h1 {
-            font-size: 3em;
-            text-shadow: 2px 2px 5px yellow;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px #ffd700;
         }
 
-        .gold-rate {
-            font-size: 2em;
+        .gold-rate,
+        .calculator {
+            font-size: 1.5em;
             margin: 20px 0;
-            padding: 10px;
-            border: 2px solid yellow;
+            padding: 15px;
+            border: 2px solid #ffd700;
             border-radius: 10px;
-            background-color: rgba(255, 255, 0, 0.1);
+            background-color: rgba(255, 215, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
         }
+
+        .buy-price,
+        .sell-price {
+            display: inline-block;
+            width: 48%;
+        }
+
+        .input-field {
+            background-color: #333;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+            border-radius: 5px;
+            padding: 5px;
+            width: 100px;
+            text-align: center;
+        }
+
+        .select-field {
+            background-color: #333;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+            border-radius: 5px;
+            padding: 5px;
+            width: 120px;
+            text-align: center;
+        }
+
+        .update-button {
+            background-color: #ffd700;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+            .update-button:hover {
+                background-color: #ffa500;
+            }
 
         footer {
-            margin-top: 50px;
-            font-size: 0.8em;
+            margin-top: 30px;
+            font-size: 0.9em;
+        }
+
+        #lastUpdate {
+            font-size: 1em;
+            margin-top: 20px;
         }
 
         .footer-text {
-            color: yellow;
-            font-size: 0.7em;
-            text-align: center;
+            color: #ffd700;
+            font-size: 0.8em;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <h1>Gold Prices in Egypt</h1>
+
     <div id="goldRates">
-        <div class="gold-rate" id="gold18">18K: Loading...</div>
-        <div class="gold-rate" id="gold21">21K: Loading...</div>
-        <div class="gold-rate" id="gold24">24K: Loading...</div>
+        <div class="gold-rate" id="gold24">
+            <span>24K Gold:</span>
+            <span class="buy-price">Buy: Loading...</span>
+            <span class="sell-price">Sell: Loading...</span>
+        </div>
+        <div class="gold-rate" id="gold21">
+            <span>21K Gold:</span>
+            <span class="buy-price">Buy: Loading...</span>
+            <span class="sell-price">Sell: Loading...</span>
+        </div>
+        <div class="gold-rate" id="gold18">
+            <span>18K Gold:</span>
+            <span class="buy-price">Buy: Loading...</span>
+            <span class="sell-price">Sell: Loading...</span>
+        </div>
     </div>
+
+    <div class="calculator">
+        <h2>Calculate Gold Price</h2>
+        <label for="goldType">Gold Type:</label>
+        <select id="goldType" class="select-field">
+            <option value="24">24K</option>
+            <option value="21">21K</option>
+            <option value="18">18K</option>
+        </select>
+
+        <label for="goldWeight">Weight (grams):</label>
+        <input type="number" id="goldWeight" class="input-field" placeholder="Weight">
+
+        <label for="additionalCost">Additional Cost (S):</label>
+        <input type="number" id="additionalCost" class="input-field" placeholder="Additional Cost">
+
+        <button class="update-button" onclick="calculatePrice()">Calculate Price</button>
+
+        <div class="result" id="priceResult">Total Price: --</div>
+    </div>
+
+    <div id="lastUpdate">Last Update: --</div>
     <footer>
         <p>Auto-updating every 10 seconds</p>
         <p class="footer-text">Made By: Mazen</p>
     </footer>
-
     <script>
-        const updateGoldRates = async () => {
+        async function updateGoldRates() {
             try {
-                const response = await fetch('https://www.goldapi.io/api/XAU/EGP', {
-                    headers: {
-                        'x-access-token': 'goldapi-4q9vjslztu7paw-io',  // Here is your API Key
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                const goldPricePerGram = data.price_gram_24k;  // Price of 24K gold per gram
-                document.getElementById('gold18').textContent = `18K: ${(goldPricePerGram * 0.75).toFixed(2)} EGP`;
-                document.getElementById('gold21').textContent = `21K: ${(goldPricePerGram * 0.875).toFixed(2)} EGP`;
-                document.getElementById('gold24').textContent = `24K: ${goldPricePerGram.toFixed(2)} EGP`;
+                const response = await fetch('https://market.isagha.com/prices');
+                const text = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+
+                const gold24Buy = doc.querySelector('#gold24 .buy-price')?.innerText || 'N/A';
+                const gold24Sell = doc.querySelector('#gold24 .sell-price')?.innerText || 'N/A';
+                const gold21Buy = doc.querySelector('#gold21 .buy-price')?.innerText || 'N/A';
+                const gold21Sell = doc.querySelector('#gold21 .sell-price')?.innerText || 'N/A';
+                const gold18Buy = doc.querySelector('#gold18 .buy-price')?.innerText || 'N/A';
+                const gold18Sell = doc.querySelector('#gold18 .sell-price')?.innerText || 'N/A';
+
+                document.querySelector('#gold24 .buy-price').innerText = `Buy: ${gold24Buy}`;
+                document.querySelector('#gold24 .sell-price').innerText = `Sell: ${gold24Sell}`;
+                document.querySelector('#gold21 .buy-price').innerText = `Buy: ${gold21Buy}`;
+                document.querySelector('#gold21 .sell-price').innerText = `Sell: ${gold21Sell}`;
+                document.querySelector('#gold18 .buy-price').innerText = `Buy: ${gold18Buy}`;
+                document.querySelector('#gold18 .sell-price').innerText = `Sell: ${gold18Sell}`;
+
+                const now = new Date();
+                document.getElementById('lastUpdate').innerText = `Last Update: ${now.toLocaleString('en-US')}`;
             } catch (error) {
                 console.error('Error fetching gold prices:', error);
             }
-        };
+        }
 
-        setInterval(updateGoldRates, 10000);  // Update prices every 10 seconds
-        updateGoldRates();  // Initial update on page load
+        function calculatePrice() {
+            const goldType = document.getElementById('goldType').value;
+            const weight = parseFloat(document.getElementById('goldWeight').value) || 0;
+            const additionalCost = parseFloat(document.getElementById('additionalCost').value) || 0;
+
+            let buyPrice;
+
+            // Determine the buy price based on selected gold type
+            switch (goldType) {
+                case '24':
+                    buyPrice = parseFloat(document.querySelector('#gold24 .sell-price').innerText.replace('Sell: ', '').replace(' EGP', '')) || 0;
+                    break;
+                case '21':
+                    buyPrice = parseFloat(document.querySelector('#gold21 .sell-price').innerText.replace('Sell: ', '').replace(' EGP', '')) || 0;
+                    break;
+                case '18':
+                    buyPrice = parseFloat(document.querySelector('#gold18 .sell-price').innerText.replace('Sell: ', '').replace(' EGP', '')) || 0;
+                    break;
+                default:
+                    buyPrice = 0;
+            }
+
+            const totalPrice = (buyPrice + 10.5 + additionalCost) * weight;
+
+            document.getElementById('priceResult').innerText = `Total Price: ${totalPrice.toFixed(2)} EGP`;
+        }
+
+        // Update gold rates every 10 seconds
+        setInterval(updateGoldRates, 10000);
+        updateGoldRates(); // Initial call to populate data immediately
     </script>
 </body>
+
 </html>
